@@ -1,25 +1,63 @@
-import { UI_CHANNEL } from "@ui/app.network";
-import { useCallback, useEffect, useState } from "react";
-import { PLUGIN } from "@common/networkSides";
+import { ChangeEvent, useCallback } from "react";
+import { useActorRef, useSelector } from "@xstate/react";
+import { uploadMachine } from "./state/uploadMachine";
 
 function App() {
-	const [count, setCount] = useState(0);
-	const [pingCount, setPingCount] = useState(0);
+	const uploadMachineActor = useActorRef(uploadMachine, {
+		inspect: (inspEvent) => {
+			if (inspEvent.type === "@xstate.snapshot") {
+				console.log(inspEvent.event);
+				console.log(inspEvent.snapshot);
+			}
+		},
+	});
 
-	useEffect(() => {
-		UI_CHANNEL.subscribe("ping", () => {
-			setPingCount((cnt) => cnt + 1);
+	const uploadedFiles = useSelector(
+		uploadMachineActor,
+		(snapshot) => snapshot.context.output
+	);
+
+	const previewReady = useSelector(uploadMachineActor, (snapshot) =>
+		snapshot.matches("preview")
+	);
+
+	const handleFileChange = useCallback(
+		(event: ChangeEvent<HTMLInputElement>) => {
+			if (!event.target.files) return;
+
+			console.log("Files uploaded", event.target.files);
+
+			uploadMachineActor.send({
+				type: "UPLOAD_FILES",
+				files: Array.from(event.target.files),
+			});
+		},
+		[uploadMachineActor]
+	);
+
+	const handleRenderIcons = useCallback(() => {
+		uploadMachineActor.send({
+			type: "RENDER_ICONS",
 		});
-	}, []);
-
-	const handleSendPing = useCallback(async () => {
-		const response = await UI_CHANNEL.request(PLUGIN, "ping", []);
-		console.log("Response:", response);
-	}, []);
+	}, [uploadMachineActor]);
 
 	return (
 		<main>
-			<button onClick={handleSendPing}>Ping</button>
+			<input
+				type="file"
+				accept=".svg,image/svg+xml"
+				multiple
+				onChange={handleFileChange}
+			/>
+			{previewReady && (
+				<button onClick={handleRenderIcons}>Render Icons</button>
+			)}
+			{[...uploadedFiles].map(([key, data]) => (
+				<div>
+					{key}
+					<svg dangerouslySetInnerHTML={{ __html: data }} />
+				</div>
+			))}
 		</main>
 	);
 }
