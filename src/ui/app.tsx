@@ -1,6 +1,10 @@
-import { ChangeEvent, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useActorRef, useSelector } from "@xstate/react";
 import { uploadMachine } from "./state/uploadMachine";
+
+import Grid from "./components/grid/Grid";
+import Dropzone from "./components/dropzone/Dropzone";
+import Stepper, { Step } from "./components/stepper/Stepper";
 
 function App() {
 	const uploadMachineActor = useActorRef(uploadMachine, {
@@ -17,47 +21,40 @@ function App() {
 		(snapshot) => snapshot.context.output
 	);
 
-	const previewReady = useSelector(uploadMachineActor, (snapshot) =>
-		snapshot.matches("preview")
+	const status = useSelector(
+		uploadMachineActor,
+		(snapshot) => snapshot.context.status
 	);
 
-	const handleFileChange = useCallback(
-		(event: ChangeEvent<HTMLInputElement>) => {
-			if (!event.target.files) return;
-
-			console.log("Files uploaded", event.target.files);
-
+	const handleUpload = useCallback(
+		(files: File[]) => {
 			uploadMachineActor.send({
 				type: "UPLOAD_FILES",
-				files: Array.from(event.target.files),
+				files: Array.from(files),
 			});
 		},
 		[uploadMachineActor]
 	);
 
-	const handleRenderIcons = useCallback(() => {
-		uploadMachineActor.send({
-			type: "RENDER_ICONS",
-		});
-	}, [uploadMachineActor]);
+	const items = useMemo(() => {
+		return Array.from(uploadedFiles.entries());
+	}, [uploadedFiles]);
 
 	return (
 		<main>
-			<input
-				type="file"
-				accept=".svg,image/svg+xml"
-				multiple
-				onChange={handleFileChange}
-			/>
-			{previewReady && (
-				<button onClick={handleRenderIcons}>Render Icons</button>
-			)}
-			{[...uploadedFiles].map(([key, data]) => (
-				<div>
-					{key}
-					<svg dangerouslySetInnerHTML={{ __html: data }} />
-				</div>
-			))}
+			<Stepper actor={uploadMachineActor}>
+				<Step step="idle">
+					<Dropzone onUpload={handleUpload} />
+				</Step>
+				<Step step="processing">
+					<div className="w-full h-full bg-gray-300 flex justify-center items-center">
+						{status}
+					</div>
+				</Step>
+				<Step step="preview">
+					<Grid items={items} />
+				</Step>
+			</Stepper>
 		</main>
 	);
 }
