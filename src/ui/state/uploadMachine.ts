@@ -1,4 +1,5 @@
-import { setup, assign, fromCallback } from "xstate";
+import { setup, assign, fromCallback, ActorRefFrom } from "xstate";
+
 
 export const base64ToSvg = (base64: string): string => {
 	return atob(base64.replace("data:image/svg+xml;base64,", ""));
@@ -225,3 +226,5 @@ export const uploadMachine = setup({
 		},
 	},
 });
+
+export type UploadMachineActor = ActorRefFrom<typeof uploadMachine>;
