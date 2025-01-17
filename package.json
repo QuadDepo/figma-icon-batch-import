@@ -22,6 +22,7 @@
 	"dependencies": {
 		"@phosphor-icons/react": "^2.1.7",
 		"@xstate/react": "^5.0.2",
+		"framer-motion": "^11.18.0",
 		"monorepo-networker": "^2.1.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
