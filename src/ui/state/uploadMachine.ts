@@ -69,7 +69,7 @@ const importBatchedIcons = fromCallback(
 
 				setTimeout(() => {
 					sendBack({ type: "PROCESSING_COMPLETE" });
-				}, remainingTime);
+				}, Math.max(remainingTime, MIN_PROCESSING_DURATION));
 				return;
 			}
 
