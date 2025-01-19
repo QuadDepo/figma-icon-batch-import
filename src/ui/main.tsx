@@ -4,6 +4,8 @@ import { Networker } from "monorepo-networker";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
+import "@ui/index.css";
+
 async function bootstrap() {
 	Networker.initialize(UI, UI_CHANNEL);
 

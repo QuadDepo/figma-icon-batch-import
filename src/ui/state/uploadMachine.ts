@@ -1,4 +1,6 @@
-import { setup, assign, fromCallback } from "xstate";
+import { setup, assign, fromCallback, ActorRefFrom } from "xstate";
+
+const MIN_PROCESSING_DURATION = 1000;
 
 export const base64ToSvg = (base64: string): string => {
 	return atob(base64.replace("data:image/svg+xml;base64,", ""));
@@ -49,6 +51,8 @@ const importBatchedIcons = fromCallback(
 		};
 		sendBack: (event: UploadMachineEvents) => void;
 	}) => {
+		const startTime = Date.now();
+
 		const processFileChunk = async (startIndex: number) => {
 			const fileMap = new Map<string, string>();
 			const chunk = Array.from(input.files).slice(
@@ -57,7 +61,15 @@ const importBatchedIcons = fromCallback(
 			);
 
 			if (chunk.length === 0) {
-				sendBack({ type: "PROCESSING_COMPLETE" });
+				const processingTime = Date.now() - startTime;
+				const remainingTime = Math.max(
+					0,
+					MIN_PROCESSING_DURATION - processingTime
+				);
+
+				setTimeout(() => {
+					sendBack({ type: "PROCESSING_COMPLETE" });
+				}, Math.max(remainingTime, MIN_PROCESSING_DURATION));
 				return;
 			}
 
@@ -116,6 +128,7 @@ const importBatchedIcons = fromCallback(
 		processFileChunk(0);
 	}
 );
+
 export const uploadMachine = setup({
 	types: {
 		context: {} as {
@@ -184,9 +197,7 @@ export const uploadMachine = setup({
 				PROCESSING_ERROR: {
 					actions: assign(({ context, event: { id, error } }) => {
 						const errors = context.errors;
-
 						errors.set(id, error);
-
 						return {
 							...context,
 							errors,
@@ -225,3 +236,5 @@ export const uploadMachine = setup({
 		},
 	},
 });
+
+export type UploadMachineActor = ActorRefFrom<typeof uploadMachine>;
