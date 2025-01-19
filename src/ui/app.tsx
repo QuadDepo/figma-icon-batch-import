@@ -5,6 +5,8 @@ import { uploadMachine } from "./state/uploadMachine";
 import Grid from "./components/grid/Grid";
 import Dropzone from "./components/dropzone/Dropzone";
 import Stepper, { Step } from "./components/stepper/Stepper";
+import Footer from "./components/footer/Footer";
+import { Button } from "./components/button/Button";
 
 function App() {
 	const uploadMachineActor = useActorRef(uploadMachine, {
@@ -53,6 +55,10 @@ function App() {
 				</Step>
 				<Step step="preview">
 					<Grid items={items} />
+					<Footer>
+						<Button.Text intent="error">Cancel</Button.Text>
+						<Button.Gradient>Create Icon Set 🎉 </Button.Gradient>
+					</Footer>
 				</Step>
 			</Stepper>
 		</main>
