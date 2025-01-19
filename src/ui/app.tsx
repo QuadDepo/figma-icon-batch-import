@@ -5,6 +5,7 @@ import { uploadMachine } from "./state/uploadMachine";
 import Grid from "./components/grid/Grid";
 import Dropzone from "./components/dropzone/Dropzone";
 import Stepper, { Step } from "./components/stepper/Stepper";
+import NumberCounter from "./components/numberCounter/NumberCounter";
 import Footer from "./components/footer/Footer";
 import { Button } from "./components/button/Button";
 
@@ -23,9 +24,9 @@ function App() {
 		(snapshot) => snapshot.context.output
 	);
 
-	const status = useSelector(
+	const totalItems = useSelector(
 		uploadMachineActor,
-		(snapshot) => snapshot.context.status
+		(snapshot) => snapshot.context.files?.length
 	);
 
 	const handleUpload = useCallback(
@@ -49,8 +50,13 @@ function App() {
 					<Dropzone onUpload={handleUpload} />
 				</Step>
 				<Step step="processing">
-					<div className="w-full h-full bg-gray-300 flex justify-center items-center">
-						{status}
+					<div className="w-full gap-4 h-full flex-col flex justify-center items-center">
+						<h3 className=" text-6xl font-bold">
+							<NumberCounter total={totalItems} value={items.length} />
+							<span> / </span>
+							{totalItems}
+						</h3>
+						<p className="text-2xl font-light italic">Icon's processed</p>
 					</div>
 				</Step>
 				<Step step="preview">
